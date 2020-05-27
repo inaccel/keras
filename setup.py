@@ -33,7 +33,7 @@ setup(
     url = 'https://docs.inaccel.com',
     keywords = ['InAccel Coral', 'FPGA', 'inaccel', package],
     install_requires = [
-        'coral-api' + coral_api, package + '==' + version,
+        'coral-api' + coral_api, package + '==' + version, 'opencv-python',
     ],
     include_package_data = True,
     zip_safe = True,
