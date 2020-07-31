@@ -60,7 +60,7 @@ def save_img(path, x, data_format='channels_last', scale=True):
         raise ValueError('Unsupported channel number: %s' % (x.shape[2],))
 
 def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
-             interpolation='nearest'):
+             interpolation='bilinear'):
     """Loads an image into cv2 format.
 
     # Arguments
@@ -73,7 +73,7 @@ def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
         interpolation: Interpolation method used to resample the image if the
             target size is different from that of the loaded image.
             Supported methods are "nearest", "bilinear", and "bicubic".
-            By default, "nearest" is used.
+            By default, "bilinear" is used.
 
     # Returns
         A cv2 Image instance.
@@ -104,7 +104,7 @@ def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
                         interpolation,
                         ", ".join(_CV2_INTERPOLATION_METHODS.keys())))
             resample = _CV2_INTERPOLATION_METHODS[interpolation]
-            img = cv2.resize(img, width_height_tuple, resample)
+            img = cv2.resize(img, width_height_tuple, interpolation=resample)
     return img
 
 def img_to_array(img, data_format='channels_last', dtype=None):
