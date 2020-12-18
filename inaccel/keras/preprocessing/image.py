@@ -48,7 +48,7 @@ def save_img(path, x, data_format='channels_last', scale=True):
         if path.endswith('.jpg') or path.endswith('.jpeg'):
             warnings.warn('The JPG format does not support '
                           'RGBA images, converting to RGB.')
-            x = cv2.cvtColor(x, cv2.COLOR_BGRA2BGR)
+            x = cv2.cvtColor(x, cv2.COLOR_RGBA2RGB)
         cv2.imwrite(path, x)
     elif x.shape[2] == 3:
         # RGB
@@ -89,9 +89,10 @@ def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     elif color_mode == 'rgba':
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGBA)
     elif color_mode == 'rgb':
         img = cv2.imread(path, cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     else:
         raise ValueError('color_mode must be "grayscale", "rgb", or "rgba"')
     if target_size is not None:
