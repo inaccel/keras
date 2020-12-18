@@ -217,7 +217,7 @@ class ResNet50:
 
         n = np.uint32(len(input))
 
-        output = inaccel.ndarray((n, 5), dtype = np.uint32)
+        output = inaccel.ndarray((n, 5), dtype = np.uint16)
 
         resnet50 = inaccel.request("xilinx.com.researchlabs.resnet50")
         resnet50.arg(input).arg(output).arg(self.model).arg(n)
