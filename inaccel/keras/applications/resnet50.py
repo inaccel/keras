@@ -54,7 +54,7 @@ class ResNet50:
                 'resnet50_weights.h5',
                 WEIGHTS_PATH,
                 cache_subdir='inaccel/models',
-                md5_hash='43dcc982d13f83fde07c09011e3af42f')
+                md5_hash='9d0d81e932eaaff345d658f2a277372c')
             self.load_weights(weights_path)
         elif weights is not None:
             self.load_weights(weights)
