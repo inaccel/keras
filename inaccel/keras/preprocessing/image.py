@@ -141,7 +141,8 @@ def img_to_array(img, data_format='channels_last', dtype=None):
 class NumpyArrayIterator(ref.NumpyArrayIterator):
 
     def _get_batches_of_transformed_samples(self, index_array):
-        batch_x = inaccel.ndarray(tuple([len(index_array)] + list(self.x.shape)[1:]),
+        with inaccel.allocator:
+            batch_x = np.ndarray(tuple([len(index_array)] + list(self.x.shape)[1:]),
                                   dtype=self.dtype)
         for i, j in enumerate(index_array):
             x = self.x[j]
@@ -181,7 +182,8 @@ class BatchFromFilesMixin(ref.image.iterator.BatchFromFilesMixin):
         # Returns
             A batch of transformed samples.
         """
-        batch_x = inaccel.ndarray(tuple([len(index_array)]) + self.image_shape,
+        with inaccel.allocator:
+            batch_x = np.ndarray(tuple([len(index_array)]) + self.image_shape,
                                   dtype=self.dtype)
         # build batch of image data
         # self.filepaths is dynamic, is better to call it once outside the loop

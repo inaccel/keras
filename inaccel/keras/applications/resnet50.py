@@ -68,7 +68,8 @@ class ResNet50:
         with h5py.File(filepath, mode='r') as f:
             if 'weights' in f:
                 # Create model.
-                self.model = inaccel.array(f['weights'][:])
+                with inaccel.allocator:
+                    self.model = np.array(f['weights'][:])
 
     def predict(self, x,
                 batch_size=None,
@@ -212,12 +213,14 @@ class ResNet50:
         return self._wait_(self._submit_(x))
 
     def _submit_(self, input):
-        if not isinstance(input, inaccel.ndarray) or input.dtype != np.int8:
-            input = inaccel.array(input, dtype = np.int8)
+        if not inaccel.allocator.handles(input) or input.dtype != np.int8:
+            with inaccel.allocator:
+                input = np.array(input, dtype = np.int8)
 
         n = np.uint32(len(input))
 
-        output = inaccel.ndarray((n, 5), dtype = np.uint16)
+        with inaccel.allocator:
+            output = np.ndarray((n, 5), dtype = np.uint16)
 
         resnet50 = inaccel.request("xilinx.com.researchlabs.resnet50")
         resnet50.arg(input).arg(output).arg(self.model).arg(n)
@@ -231,7 +234,7 @@ class ResNet50:
         }
 
     def _wait_(self, accelerator):
-        inaccel.wait(accelerator['_'])
+        accelerator['_'].result()
 
         return accelerator['out']
 

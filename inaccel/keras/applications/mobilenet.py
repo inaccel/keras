@@ -163,12 +163,14 @@ class MobileNet:
         return self._wait_(self._submit_(x))
 
     def _submit_(self, input):
-        if not isinstance(input, inaccel.ndarray) or input.dtype != np.int8:
-            input = inaccel.array(input, dtype = np.int8)
+        if not inaccel.allocator.handles(input) or input.dtype != np.int8:
+            with inaccel.allocator:
+                input = np.array(input, dtype = np.int8)
 
         n = np.uint32(len(input))
 
-        output = inaccel.ndarray((n, 5), dtype = np.uint16)
+        with inaccel.allocator:
+            output = np.ndarray((n, 5), dtype = np.uint16)
 
         mobilenet = inaccel.request("xilinx.com.researchlabs.mobilenet")
         mobilenet.arg(input).arg(output).arg(n)
@@ -181,7 +183,7 @@ class MobileNet:
         }
 
     def _wait_(self, accelerator):
-        inaccel.wait(accelerator['_'])
+        accelerator['_'].result()
 
         return accelerator['out']
 
