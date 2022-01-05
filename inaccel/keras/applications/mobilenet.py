@@ -1,16 +1,15 @@
-"""MobileNet v1 model for Keras.
+"""MobileNet model for Keras.
 
 # Reference
-
-- [MobileNets: Efficient Convolutional Neural Networks for
-   Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
+  - [MobileNets: Efficient Convolutional Neural Networks
+     for Mobile Vision Applications](
+      https://arxiv.org/abs/1704.04861)
 """
 
-import h5py
 import inaccel.coral as inaccel
-import keras.engine.training_utils as training_utils
+import keras.utils.data_utils as data_utils
+import keras.utils.generic_utils as generic_utils
 import numpy as np
-import os
 
 from .imagenet_utils import decode_predictions
 from concurrent.futures import ThreadPoolExecutor
@@ -18,8 +17,7 @@ from queue import Queue
 from threading import Thread
 
 class MobileNet:
-    """Instantiates the MobileNet architecture.
-    """
+    """Instantiates the MobileNet architecture."""
 
     def predict(self, x,
                 batch_size=None,
@@ -59,7 +57,7 @@ class MobileNet:
             ValueError: In case of mismatch between the provided
                 input data and the model's expectations.
         """
-        if batch_size is not None and training_utils.is_generator_or_sequence(x):
+        if batch_size is not None and data_utils.is_generator_or_sequence(x):
             raise ValueError('The `batch_size` argument must not be specified when'
                              ' using a generator or Sequence as an input.')
 
@@ -68,7 +66,7 @@ class MobileNet:
             batch_size = 32
 
         # Case 1: generator-like. Input is Python generator, or Sequence object.
-        if training_utils.is_generator_or_sequence(x):
+        if data_utils.is_generator_or_sequence(x):
             return self.predict_generator(
                 x,
                 steps=steps,
@@ -77,7 +75,7 @@ class MobileNet:
 
         # Case 2: Numpy array-like.
         outputs = []
-        for start, stop in training_utils.make_batches(len(x), batch_size):
+        for start, stop in generic_utils.make_batches(len(x), batch_size):
             outputs.append(self.predict_on_batch(x[start:stop]))
         return np.vstack(outputs)
 
@@ -111,7 +109,7 @@ class MobileNet:
                 data in an invalid format.
         """
         outputs = []
-        use_sequence_api = training_utils.is_sequence(generator)
+        use_sequence_api = isinstance(generator, data_utils.Sequence)
         if steps is None:
             if use_sequence_api:
                 steps = len(generator)

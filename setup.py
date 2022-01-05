@@ -19,7 +19,7 @@ def bump(package, version):
 coral_api = '==2.*'
 
 package = 'keras'
-version = '2.3.1'
+version = '2.7.0'
 
 setup(
     name = 'inaccel-' + package,
@@ -33,7 +33,7 @@ setup(
     url = 'https://docs.inaccel.com',
     keywords = ['InAccel Coral', 'FPGA', 'inaccel', package],
     install_requires = [
-        'coral-api' + coral_api, package + '==' + version, 'opencv-python',
+        'coral-api' + coral_api, package + '==' + version, 'h5py', 'keras-preprocessing', 'opencv-python',
     ],
     include_package_data = True,
     zip_safe = True,

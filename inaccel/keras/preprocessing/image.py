@@ -1,5 +1,4 @@
-"""Utilities for real-time data augmentation on image data.
-"""
+"""Set of tools for real-time data augmentation on image data."""
 
 import cv2
 import inaccel.coral as inaccel
@@ -38,7 +37,7 @@ def save_img(path, x, data_format='channels_last', scale=True):
     if data_format == 'channels_first':
         x = x.transpose(1, 2, 0)
     if scale:
-        x = x + max(-np.min(x), 0)
+        x = x - np.min(x)
         x_max = np.max(x)
         if x_max != 0:
             x /= x_max
@@ -66,14 +65,14 @@ def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
     # Arguments
         path: Path to image file.
         grayscale: DEPRECATED use `color_mode="grayscale"`.
-        color_mode: One of "grayscale", "rgb", "rgba". Default: "rgb".
-            The desired image format.
+        color_mode: The desired image format. One of "grayscale", "rgb", "rgba".
+            Default: "rgb".
         target_size: Either `None` (default to original size)
             or tuple of ints `(img_height, img_width)`.
         interpolation: Interpolation method used to resample the image if the
             target size is different from that of the loaded image.
             Supported methods are "nearest", "bilinear", and "bicubic".
-            By default, "bilinear" is used.
+            Default: "bilinear".
 
     # Returns
         A cv2 Image instance.
@@ -108,7 +107,7 @@ def load_img(path, grayscale=False, color_mode='rgb', target_size=None,
             img = cv2.resize(img, width_height_tuple, interpolation=resample)
     return img
 
-def img_to_array(img, data_format='channels_last', dtype=None):
+def img_to_array(img, data_format='channels_last', dtype='float32'):
     """Converts a cv2 Image instance to a Numpy array.
 
     # Arguments
@@ -143,7 +142,7 @@ class NumpyArrayIterator(ref.NumpyArrayIterator):
     def _get_batches_of_transformed_samples(self, index_array):
         with inaccel.allocator:
             batch_x = np.ndarray(tuple([len(index_array)] + list(self.x.shape)[1:]),
-                                  dtype=self.dtype)
+                                 dtype=self.dtype)
         for i, j in enumerate(index_array):
             x = self.x[j]
             params = self.image_data_generator.get_random_transform(x.shape)
@@ -183,8 +182,7 @@ class BatchFromFilesMixin(ref.image.iterator.BatchFromFilesMixin):
             A batch of transformed samples.
         """
         with inaccel.allocator:
-            batch_x = np.ndarray(tuple([len(index_array)]) + self.image_shape,
-                                  dtype=self.dtype)
+            batch_x = np.ndarray((len(index_array),) + self.image_shape, dtype=self.dtype)
         # build batch of image data
         # self.filepaths is dynamic, is better to call it once outside the loop
         filepaths = self.filepaths
@@ -254,10 +252,10 @@ class ImageDataGenerator(ref.ImageDataGenerator):
         """Takes data & label arrays, generates batches of augmented data.
 
         # Arguments
-            x: Input data. Numpy array of rank 4 or a tuple.
+            x: Input data. NumPy array of rank 4 or a tuple.
                 If tuple, the first element
                 should contain the images and the second element
-                another numpy array or a list of numpy arrays
+                another NumPy array or a list of NumPy arrays
                 that gets passed to the output
                 without any modifications.
                 Can be used to feed the model miscellaneous data
@@ -285,13 +283,13 @@ class ImageDataGenerator(ref.ImageDataGenerator):
 
         # Returns
             An `Iterator` yielding tuples of `(x, y)`
-                where `x` is a numpy array of image data
+                where `x` is a NumPy array of image data
                 (in the case of a single image input) or a list
-                of numpy arrays (in the case with
-                additional inputs) and `y` is a numpy array
+                of NumPy arrays (in the case with
+                additional inputs) and `y` is a NumPy array
                 of corresponding labels. If 'sample_weight' is not None,
                 the yielded tuples are of the form `(x, y, sample_weight)`.
-                If `y` is None, only the numpy array `x` is returned.
+                If `y` is None, only the NumPy array `x` is returned.
         """
         return NumpyArrayIterator(
             x,
@@ -386,13 +384,14 @@ class ImageDataGenerator(ref.ImageDataGenerator):
                 resample the image if the
                 target size is different from that of the loaded image.
                 Supported methods are `"nearest"`, `"bilinear"`,
-                and `"bicubic"`. By default, `"nearest"` is used.
+                and `"bicubic"`.
+                By default, `"nearest"` is used.
 
         # Returns
             A `DirectoryIterator` yielding tuples of `(x, y)`
-                where `x` is a numpy array containing a batch
+                where `x` is a NumPy array containing a batch
                 of images with shape `(batch_size, *target_size, channels)`
-                and `y` is a numpy array of corresponding labels.
+                and `y` is a NumPy array of corresponding labels.
         """
         return DirectoryIterator(
             directory,
@@ -401,10 +400,10 @@ class ImageDataGenerator(ref.ImageDataGenerator):
             color_mode=color_mode,
             classes=classes,
             class_mode=class_mode,
+            data_format=self.data_format,
             batch_size=batch_size,
             shuffle=shuffle,
             seed=seed,
-            data_format=self.data_format,
             save_to_dir=save_to_dir,
             save_prefix=save_prefix,
             save_format=save_format,
@@ -473,14 +472,14 @@ class ImageDataGenerator(ref.ImageDataGenerator):
             class_mode: one of "binary", "categorical", "input", "multi_output",
                 "raw", sparse" or None. Default: "categorical".
                 Mode for yielding the targets:
-                - `"binary"`: 1D numpy array of binary labels,
-                - `"categorical"`: 2D numpy array of one-hot encoded labels.
+                - `"binary"`: 1D NumPy array of binary labels,
+                - `"categorical"`: 2D NumPy array of one-hot encoded labels.
                     Supports multi-label output.
                 - `"input"`: images identical to input images (mainly used to
                     work with autoencoders),
                 - `"multi_output"`: list with the values of the different columns,
-                - `"raw"`: numpy array of values in `y_col` column(s),
-                - `"sparse"`: 1D numpy array of integer labels,
+                - `"raw"`: NumPy array of values in `y_col` column(s),
+                - `"sparse"`: 1D NumPy array of integer labels,
                 - `None`, no targets are returned (the generator will only yield
                     batches of image data, which is useful to use in
                     `model.predict_generator()`).
@@ -510,9 +509,9 @@ class ImageDataGenerator(ref.ImageDataGenerator):
 
         # Returns
             A `DataFrameIterator` yielding tuples of `(x, y)`
-            where `x` is a numpy array containing a batch
+            where `x` is a NumPy array containing a batch
             of images with shape `(batch_size, *target_size, channels)`
-            and `y` is a numpy array of corresponding labels.
+            and `y` is a NumPy array of corresponding labels.
         """
         return DataFrameIterator(
             dataframe,
@@ -525,15 +524,15 @@ class ImageDataGenerator(ref.ImageDataGenerator):
             color_mode=color_mode,
             classes=classes,
             class_mode=class_mode,
+            data_format=self.data_format,
             batch_size=batch_size,
             shuffle=shuffle,
             seed=seed,
-            data_format=self.data_format,
             save_to_dir=save_to_dir,
             save_prefix=save_prefix,
             save_format=save_format,
             subset=subset,
             interpolation=interpolation,
-            dtype=self.dtype,
-            validate_filenames=validate_filenames
+            validate_filenames=validate_filenames,
+            dtype=self.dtype
         )

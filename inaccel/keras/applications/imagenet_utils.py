@@ -1,5 +1,4 @@
-"""Utilities for ImageNet data preprocessing & prediction decoding.
-"""
+"""Utilities for ImageNet data preprocessing & prediction decoding."""
 
 import json
 import keras.utils.data_utils as data_utils
@@ -13,7 +12,7 @@ def decode_predictions(preds, top=5):
 
     # Arguments
         preds: Numpy array encoding a batch of predictions.
-        top: Integer, how many top-guesses to return.
+        top: Integer, how many top-guesses to return. Defaults to 5.
 
     # Returns
         A list of lists of top class prediction tuples
