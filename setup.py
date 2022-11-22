@@ -33,7 +33,6 @@ version = '2.7.0'
 setup(
     name='inaccel-' + package,
     packages=find_namespace_packages(include=['inaccel.*']),
-    namespace_packages=['inaccel'],
     version=bump(package, version),
     license='Apache-2.0',
     description='InAccel ' + package + '-like package',
